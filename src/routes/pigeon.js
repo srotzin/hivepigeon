@@ -1,0 +1,11 @@
+'use strict';const{Router}=require('express');const e=require('../services/messaging-engine');const r=Router();
+r.post('/v1/pigeon/send',(q,s)=>{const{from_did,to_did,content,encrypted,priority,ttl_seconds}=q.body;if(!from_did||!to_did||!content)return s.status(400).json({error:'from_did, to_did, content required'});s.status(201).json({status:'delivered',message:e.send(from_did,to_did,content,{encrypted,priority,ttl_seconds})})});
+r.post('/v1/pigeon/channel',(q,s)=>{const{name,members,type,topic,created_by}=q.body;if(!name||!members)return s.status(400).json({error:'name and members required'});s.status(201).json({status:'channel_created',channel:e.createChannel(name,members,{type,topic,created_by})})});
+r.post('/v1/pigeon/channel/:id/post',(q,s)=>{const{from_did,content}=q.body;const m=e.postToChannel(q.params.id,from_did,content);if(!m)return s.status(404).json({error:'Channel not found'});s.status(201).json({status:'posted',message:m})});
+r.post('/v1/pigeon/broadcast',(q,s)=>{const{from_did,content,scope,priority}=q.body;if(!from_did||!content)return s.status(400).json({error:'from_did and content required'});s.status(201).json({status:'broadcast_sent',message:e.broadcast(from_did,content,{scope,priority})})});
+r.post('/v1/pigeon/deaddrop',(q,s)=>{const{agent_did,content,location,pickup_code,ttl_hours}=q.body;if(!agent_did||!content)return s.status(400).json({error:'agent_did and content required'});s.status(201).json({status:'drop_placed',dead_drop:e.placeDeadDrop(agent_did,content,{location,pickup_code,ttl_hours})})});
+r.post('/v1/pigeon/deaddrop/:id/pickup',(q,s)=>{const result=e.pickupDeadDrop(q.params.id,q.body.code);if(!result)return s.status(404).json({error:'Dead drop not found'});if(result.error)return s.status(403).json(result);s.json({status:'picked_up',dead_drop:result})});
+r.get('/v1/pigeon/inbox/:did',(q,s)=>s.json({messages:e.getInbox(q.params.did)}));
+r.get('/v1/pigeon/stats',(_,s)=>s.json(e.getStats()));
+r.get('/v1/pigeon/channels',(_,s)=>s.json({channels:e.listChannels()}));
+module.exports=r;
