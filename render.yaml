@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: hivepigeon
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install
+    startCommand: node src/server.js
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HIVEGATE_URL
+        value: https://hivegate.onrender.com
+      - key: HIVETRUST_URL
+        value: https://hivetrust.onrender.com
